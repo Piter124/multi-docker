@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+  before_install:
+    - docker build -t pgolpys/react-test -f ./client/Dockerfile.dev ./client
+
+    script:
+      - docker run pgolpys/react-test npm test -- --coverage
+
+      after_sucess:
+        - docker build -t pgolpys/multi-client ./client
+        - docker build -t pgolpys/multi-nginx ./nginx
+        - docker build -t pgolpys/multi-server ./server
+        - docker build -t pgolpys/multi-worker ./worker
+        #log in to the docker cli
+        - echo "$DOCKER_PASSWOED"  | docker login -u "$DOCKER_ID" --password-stdin
+        #take those images and push them to docker hub
+        - docker push pgolpys/mutli-client
+        - docker push pgolpys/multi-nginx
+        - docker push pgolpys/multi-server
+        - docker push pgolpys/multi-worker
